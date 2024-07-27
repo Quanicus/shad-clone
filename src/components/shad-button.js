@@ -30,7 +30,9 @@ class ShadButton extends HTMLElement {
         this.attachShadow({mode: "open"});
         this.shadowRoot.appendChild(template.content.cloneNode(true));
 
-
+        this.eventName = "";
+        this.mousedown = false;
+        this.colorScheme = {};
 
         // this.internals_ = this.attachInternals();
         // this.addEventListener('click', this._onClick);
@@ -71,9 +73,6 @@ class ShadButton extends HTMLElement {
         this.setAttribute('value', value);
     }
     connectedCallback() {
-        this.eventName = "";
-        this.mousedown = false;
-        this.colorScheme = {};
         this.initColorScheme();
         // const eventName = this.getAttribute("data-event");
         // this.eventName = eventName ?? "shad-button-click";
