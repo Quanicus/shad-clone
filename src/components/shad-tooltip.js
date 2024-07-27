@@ -22,11 +22,12 @@ class ShadTooltip extends HTMLElement {
         super()
         this.attachShadow({mode: "open"});
         this.shadowRoot.appendChild(template.content.cloneNode(true));
-        this.style.opacity = "0";
-        this.style.position = "fixed";
+        
         this.triggerElement = false;
     }
     connectedCallback() {
+        this.style.opacity = "0";
+        this.style.position = "fixed";
         if (this.parentElement === document.body) return;
 
         this.triggerElement = this.parentElement;
