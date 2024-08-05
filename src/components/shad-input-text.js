@@ -17,7 +17,7 @@ template.innerHTML = `
             & .placeholder::after {
                 font-size: 0.65rem;
                 top: -0.65em;
-                color: white;
+                color: gold;
                 padding-inline: 0.3em;
                 transition-duration: 0.15s;
             }
@@ -135,13 +135,8 @@ template.innerHTML = `
             width: 100%;
             height: 100%;
 
-            &::selection {
-                background: transparent;
-            }
-            background: transparent;
-            color: transparent;
+            opacity: 0;
         }
-
     </style>
     <div class="placeholder">
         <input spellcheck="false"/>
@@ -152,7 +147,6 @@ template.innerHTML = `
 `;
 //pattern-error
 class ShadInputText extends HTMLElement {
-
     static formAssociated = true;
     //static emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$";
     static emailRegex = "^[^@]+@[^@]+\.[^@]+$";
@@ -160,8 +154,9 @@ class ShadInputText extends HTMLElement {
 
     constructor() {
         super();
-        this.attachShadow({mode: "open"});
-        this.shadowRoot.appendChild(template.content.cloneNode(true));
+        this.attachShadow({ mode: "open", delegatesFocus: true }).
+        appendChild(template.content.cloneNode(true));
+
         this._internals = this.attachInternals();
         
 
@@ -178,38 +173,38 @@ class ShadInputText extends HTMLElement {
         return ["value", 'type', 'disabled', 'required', 'maxlength', 'minlength', 'pattern', 'readonly', 'autocomplete', 'autofocus', 'name', 'size'];
     }
     attributeChangedCallback(name, oldValue, newValue) {
-        if (oldValue !== newValue) {//mostly serves to initialize shadow input attributes
-            switch(name) {
-                case "type":
-                    if (!ShadInputText.inputTypes.includes(newValue)) {
-                        throw new Error("shad-input-text can only be of types:", ShadInputText.inputTypes);
-                    } else if (newValue === "email") {
-                        this.input.pattern = ShadInputText.emailRegex
-                        newValue = "text";
-                    }
-                    break;
-                case "value":
-                    //this._internals.setFormValue(newValue);
-                    this.input[name] = newValue;
-                    this.input.dispatchEvent(new Event("input"));
-                    //console.log(this.value);
-                    break;
-                default:
-            }
-            this.input[name] = newValue;
+        if (oldValue === newValue) return;//mostly serves to initialize shadow input attributes
+        switch(name) {
+            case "type":
+                if (!ShadInputText.inputTypes.includes(newValue)) {
+                    throw new Error("shad-input-text can only be of types:", ShadInputText.inputTypes);
+                } else if (newValue === "email") {
+                    this.input.pattern = ShadInputText.emailRegex
+                    newValue = "text";    
+                }
+                this.input.type = newValue;
+                break;
+            case "value":
+                this.input.value = newValue;
+                this.input.dispatchEvent(new Event("input"));
+                break;
+            default:
+                this.input[name] = newValue;
         }
     }
-    connectedCallback() {
+    connectedCallback() {        
+        this._proxyInput();
+        this._internals.setFormValue(this.value);
+        this._internals.setValidity(this.input.validity, this.input.validationMessage, this.input);
         
-        this._internals.setValidity(this.input.validity, this.input.validationMessage);
-        
-        this.tabIndex = this.getAttribute("tabindex") ?? "-1";
+        this.tabIndex = this.getAttribute("tabindex") ?? "0";
+        this.input.tabIndex = this.tabIndex;
         this.initialValue = this.value;
-        //console.log("initial value: ", this.value);
+        console.log("initial value: ", this.value);
         
         this.setPlaceholder();
         this.initCaret();
-        this._proxyInput();
+
         // this.attachListeners();
     }
     bubbleEvents(events) {
@@ -234,17 +229,17 @@ class ShadInputText extends HTMLElement {
         input.addEventListener("beforeinput", this.handleBeforeInput);
         input.addEventListener('input', this.handleAfterInput);
         input.addEventListener("scroll", this.syncScroll);
-        input.addEventListener("click", this.captureSelection);
         input.addEventListener("mousedown", this.startSelecting);
         input.addEventListener('mouseup', this.captureSelection);
+        input.addEventListener("click", this.captureSelection);
         input.addEventListener('keyup', this.captureSelection);
-        this.addEventListener("focus", () => this.input.focus());
+        //this.addEventListener("focus", () => this.input.focus());
         //this.addEventListener("input", () => console.log("custom element inputted"));
         // input.addEventListener("paste", this.handlePaste);
         
     }
     _proxyInput() {//getters and setters reroute to the shadow input
-        const input = this.input;
+        const input = this.shadowRoot.querySelector("input");
         const propsToBind = ["value", 'placeholder', 'disabled', 'required', 'maxlength',
             'minlength', 'pattern', 'readonly', 'autocomplete', 'autofocus',
             'name', 'size',];
@@ -253,11 +248,11 @@ class ShadInputText extends HTMLElement {
             Object.defineProperty(this, prop, {
                 get: () => input[prop],
                 set: (newValue) => {
-                    //input[prop] = newValue
-                    this.setAttribute(prop, newValue);
-                    // if (prop === "value") {
-                    //     this._internals.setFormValue(newValue);
-                    // }
+                    input[prop] = newValue;
+                    
+                    if (prop === "value") {
+                        this.input.dispatchEvent(new Event("input"));
+                    }
                 },
                 enumerable: true,
                 configurable: true
@@ -325,7 +320,7 @@ class ShadInputText extends HTMLElement {
             input.setCustomValidity("");
         }
         this._internals.setFormValue(this.value);
-        this._internals.setValidity(input.validity, input.validationMessage);
+        this._internals.setValidity(input.validity, input.validationMessage, this.input);
 
         if (input.value.length === 0) {
             placeholder.classList.add("empty");
@@ -358,7 +353,7 @@ class ShadInputText extends HTMLElement {
         if (start !== end) {//if text selected
             //this.caretElement.classList.remove("caret");
             this.selectText(start, end);
-        } else if (start){
+        } else {
             this.selectText();
             //update caret position
             this.caretElement = this.display.children[start]
@@ -426,12 +421,10 @@ class ShadInputText extends HTMLElement {
 
     formResetCallback() {
         // Called when the form is reset
-        //console.log("shad reset");
+        this.display.innerHTML = "";
         if (this.initialValue) {
             this.value = this.initialValue;
-            this.syncInput();
         } else {
-            this.display.innerHTML = "";
             this.initCaret();
             this.shadowRoot.querySelector(".placeholder").classList.add("empty");
         }
