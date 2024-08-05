@@ -119,6 +119,7 @@ template.innerHTML = `
             left: calc(100% + .5em);
             transform: translateY(-50%);
             cursor: pointer;
+            width: max-content;
         }
         
     </style>
