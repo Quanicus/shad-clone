@@ -28,10 +28,6 @@ template.innerHTML = `
                 height: 15px;
             }
         }
-        :host(:hover) svg,
-        :host(:focus-within) svg {
-            stroke-dashoffset: 0;
-        }
         :host([type="switch"]) {
             display: flex;
             align-items: center;
@@ -83,22 +79,24 @@ template.innerHTML = `
             height: 132%;
 
             & .border {
-                stroke-dasharray: 60; /* Length of the stroke */
-                stroke-dashoffset: 60;
-                transition: stroke-dashoffset 900ms ease-in-out;
+                stroke-dasharray: 40; /* Length of the stroke */
+                stroke-dashoffset: 40;
+                transition: stroke-dashoffset 600ms ease-in-out;
                 filter: blur(.3px);
                 
                 &.glow {
                     filter: blur(1px);
-                }
-                :hover & {
-                    stroke-dashoffset: 0;
                 }
             }
             & .center {
                 fill: transparent;
                 stroke: transparent;
             }
+        }
+        :host(:hover) svg,
+        :host(:focus-within) svg {
+            stroke-dashoffset: 0;
+            transition-duration: 400ms;
         }
         :host(:not([type="radio"]):hover),
         :host(:not([type="radio"]):focus) {
@@ -235,6 +233,7 @@ class ShadInputToggle extends HTMLElement {
 
     handleClick = (event) => {
         this.checked = !this.checked;
+        //this.handleChange();
         this.input.dispatchEvent(new Event("change"));
     }
     handleChange = (event) => {
@@ -246,9 +245,9 @@ class ShadInputToggle extends HTMLElement {
             this._internals.setFormValue(null);
         }
         this.setValidity();
+        this.dispatchEvent(new Event("change"));
     }
     handleNewRadioSelection = (event) => {
-        console.log("new radio");
         const newRadio = event.target;
         const groupName = newRadio.name;
         const prevRadio = ShadInputToggle.radioGroups[groupName];

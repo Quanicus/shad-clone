@@ -24,7 +24,7 @@ template.innerHTML = `
     </style>
     <slot></slot>
 `;
-class ShadButton extends HTMLElement {
+export class ShadButton extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({mode: "open"});
@@ -34,19 +34,10 @@ class ShadButton extends HTMLElement {
         this.mousedown = false;
         this.colorScheme = {};
 
-        // this.internals_ = this.attachInternals();
+        this.internals_ = this.attachInternals();
         // this.addEventListener('click', this._onClick);
     }
-    // _onClick = () => {
-    //     const event = new Event('submit', { cancelable: true, bubbles: true });
-    //     if (this.form && this.type === "submit") { // Accessing `this.form` calls the `get form()` method
-    //         if (this.form.checkValidity()){
-    //             this.form.dispatchEvent(event);
-    //         } else {
-    //             this.form.reportValidity();
-    //         }
-    //     }
-    // }
+
     // Indicate that the element is form-associated
     static get formAssociated() {
         return true;

@@ -54,7 +54,7 @@ template.innerHTML = `
         }
         :host([type="password"]) {
             & input {
-                letter-spacin: 0.2em;
+                
             }
         }
         .placeholder {
@@ -64,6 +64,7 @@ template.innerHTML = `
             height: 100%;
             width: 100%;
             background-color: black;
+            border-radius: 5px;
 
             &::after {
                 content: var(--placeholder);
@@ -82,7 +83,7 @@ template.innerHTML = `
         .placeholder.empty {
             &::after {
                 top: 0.5rem;
-                border-radius: 50%;
+                border-radiu: 50%;
                 transition-duration: 0.25s;
                 font-size: 1rem;
                 color: white;
@@ -100,25 +101,23 @@ template.innerHTML = `
             width: 100%;
             height: 100%;
             background-color: black;
-            overflow-x: scroll;
+            overflow: auto;
 
             & span {
                 position: relative;
-                animation: drop-in .35s forwards;
                 flex-shrink: 0;
-            }
-        }
-        @keyframes drop-in {
-            0%, 35% {
-                transform: translateY(0);
-                opacity: 1;
-                color: gold;
-                
-            }
-            100% {
-                transform: translateY(0);
-                opacity: 1;
-                color: white;
+                transition: all 50ms linear;
+                overflow: visible;
+
+                &.float {
+                    transform: translateY(-0.2em) scale(1.2);
+                    text-shadow: 
+                        0px 0px 1px white,
+                        0px 0px 2px white,
+                        0px 0px 3px white,
+                        0px 0px 4px white,
+                        0px 0px 0px white;
+                }
             }
         }
         @keyframes blink {
@@ -142,8 +141,8 @@ template.innerHTML = `
         <input spellcheck="false"/>
         <div class="text-display"></div>
     </div>
-    
-    
+    <audio id="click" src="./audio/click.mp3"></audio>
+    <audio id="clack" src="./audio/clack.mp3"></audio>
 `;
 //pattern-error
 class ShadInputText extends HTMLElement {
@@ -162,6 +161,9 @@ class ShadInputText extends HTMLElement {
 
         this.display = this.shadowRoot.querySelector(".text-display");
         this.input = this.shadowRoot.querySelector("input");
+        this.clickSoundClip = this.shadowRoot.getElementById("click");
+        this.clackSoundClip = this.shadowRoot.getElementById("clack");
+        this.recentCharInput = document.createElement("div");
 
         this.selectedCards = [];
         
@@ -200,8 +202,9 @@ class ShadInputText extends HTMLElement {
         this.tabIndex = this.getAttribute("tabindex") ?? "0";
         this.input.tabIndex = this.tabIndex;
         this.initialValue = this.value;
-        console.log("initial value: ", this.value);
+        //console.log("initial value: ", this.value);
         
+        this.activateSoundEffects();
         this.setPlaceholder();
         this.initCaret();
 
@@ -233,6 +236,15 @@ class ShadInputText extends HTMLElement {
         input.addEventListener('mouseup', this.captureSelection);
         input.addEventListener("click", this.captureSelection);
         input.addEventListener('keyup', this.captureSelection);
+        input.addEventListener("keyup", () => {
+            this.recentCharInput.classList.remove("float");
+            if (this.needClack) {
+                this.clackSoundClip.currentTime = 0;
+                this.clackSoundClip.play();
+                this.needClack = false;
+            }
+        });
+        input.addEventListener("keydown", () => console.log("keydown"));
         //this.addEventListener("focus", () => this.input.focus());
         //this.addEventListener("input", () => console.log("custom element inputted"));
         // input.addEventListener("paste", this.handlePaste);
@@ -271,6 +283,7 @@ class ShadInputText extends HTMLElement {
     }
     //HANDANDLERS
     handleBeforeInput = (event) => {
+        console.log("before input");
         const display = this.display;
         const input = this.input;
         const start = input.selectionStart;
@@ -282,15 +295,19 @@ class ShadInputText extends HTMLElement {
             this.caretElement = this.display.children[start];
         }
         switch (event.inputType){
-            case "insertText":
-                const char = event.data;
-                //add inserted text into container starting at start
-                display.insertBefore(this.makeCharCard(char),this.caretElement);
+            case "insertText"://a single char is inputted
+                const newCharCard = this.makeCharCard(event.data);
+                newCharCard.classList.add("float");
+                display.insertBefore(newCharCard, this.caretElement);
+                this.recentCharInput.classList.remove("float");
                 
+                this.recentCharInput = newCharCard;
+                this.clickSoundClip.currentTime = 0;
+                this.clickSoundClip.play();
+                this.needClack = true;
                 break;
             case "deleteContentBackward":
-                if (!selectedText) {
-                    //remove charCards[start - 1]
+                if (!selectedText && display.children.length > 1) {
                     display.removeChild(display.children[start - 1]);    
                 }
                 break;
@@ -304,6 +321,7 @@ class ShadInputText extends HTMLElement {
         }
     }
     handleAfterInput = (event) => {
+        console.log("after input");
         const placeholder = this.shadowRoot.querySelector(".placeholder");
         const input = this.input;
         if (this.value.length !== this.display.childElementCount - 1) {
@@ -406,6 +424,10 @@ class ShadInputText extends HTMLElement {
                 charCards[position].classList.remove("selected");
             }
         }
+    }
+
+    activateSoundEffects() {
+        this.clickSoundElement = document.createElement("audio");
     }
 
     // Form-related methods
