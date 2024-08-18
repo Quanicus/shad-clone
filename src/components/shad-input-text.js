@@ -21,6 +21,7 @@ template.innerHTML = `
                 color: gold;
                 padding-inline: 0.3em;
                 transition-duration: 0.15s;
+                width: fit-content;
             }
             & .text-display {
                 border-color: white;
@@ -59,13 +60,13 @@ template.innerHTML = `
             }
         }
         .placeholder {
-            --placeholder: "default";
+            --placeholder: "";
             position: relative;
             padding: 0.5em;
             height: 100%;
-            width: 100%;
-            background-color: black;
+            width: fit-content;
             border-radius: 5px;
+            background-color: black;
 
             &::after {
                 content: var(--placeholder);
@@ -79,6 +80,7 @@ template.innerHTML = `
                 transition-property: top, font-size;
                 transition-duration: 0.15s;
                 transition-timing-function: ease-in;
+                border-radius: 3px;
             }     
         }
         .placeholder.empty {
@@ -87,7 +89,7 @@ template.innerHTML = `
                 border-radiu: 50%;
                 transition-duration: 0.25s;
                 font-size: 1rem;
-                color: white;
+                color: white;        
             }
         }
         .text-display {
@@ -101,7 +103,7 @@ template.innerHTML = `
             border-radius: 5px;
             width: 100%;
             height: 100%;
-            background-color: black;
+            
             overflow: auto;
 
             & span {
@@ -123,10 +125,11 @@ template.innerHTML = `
         }
         @keyframes blink {
             from, to {
-                visibility: visible;
+                background-color: white;
             }
             50% {
-                visibility: hidden;
+                background-color: white;
+                box-shadow: .5px 0 2px 1.5px rgba(255,255,255,1);
             }
         }
         input {
