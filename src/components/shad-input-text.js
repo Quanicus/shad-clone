@@ -145,8 +145,8 @@ template.innerHTML = `
         <input spellcheck="false"/>
         <div class="text-display"></div>
     </div>
-    <audio id="click" src="./audio/click.mp3"></audio>
-    <audio id="clack" src="./audio/clack.mp3"></audio>
+    <audio id="click" src="https://cdn.jsdelivr.net/gh/quanicus/shad-clone@v0.1.6-alpha/src/audio/click.mp3"></audio>
+    <audio id="clack" src="https://cdn.jsdelivr.net/gh/quanicus/shad-clone@v0.1.6-alpha/src/audio/clack.mp3"></audio>
 `;
 //pattern-error
 class ShadInputText extends HTMLElement {
